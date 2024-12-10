@@ -7,6 +7,7 @@ from authentication.serializers import (
     UserRegisterationSerializer,
     UserLoginSerializer,
     UserProfileSerializer,
+    UserChangePasswordSerializer,
 )
 from rest_framework_simplejwt.tokens import RefreshToken
 from rest_framework.permissions import IsAuthenticated
@@ -75,6 +76,7 @@ class UserLoginView(APIView):
 
 class UserProfileView(APIView):
     permission_classes = [IsAuthenticated]
+
     def get(self, request, format=None):
         serializer = UserProfileSerializer(request.user)
         return Response(
@@ -84,4 +86,26 @@ class UserProfileView(APIView):
                 "data": serializer.data,
             },
             status=status.HTTP_200_OK,
+        )
+
+
+class UserChangePasswordView(APIView):
+    permission_classes = [IsAuthenticated]
+
+    def post(self, request, format=None):
+        serializer = UserChangePasswordSerializer(
+            data=request.data, context={"user": request.user}
+        )
+        if serializer.is_valid():
+            return Response(
+                {
+                    "status": True,
+                    "message": "Profile Changed Successfull",
+                    "data": "",
+                },
+                status=status.HTTP_200_OK,
+            )
+        return Response(
+            {"status": False, "errors": serializer.errors, "data": ""},
+            status=status.HTTP_400_BAD_REQUEST,
         )
