@@ -3,7 +3,11 @@ from rest_framework import status
 from rest_framework.views import APIView
 from authentication.models import User
 from django.contrib.auth import authenticate
-from authentication.serializers import UserRegisterationSerializer, UserLoginSerializer
+from authentication.serializers import (
+    UserRegisterationSerializer,
+    UserLoginSerializer,
+    UserProfileSerializer,
+)
 from rest_framework_simplejwt.tokens import RefreshToken
 from rest_framework.permissions import IsAuthenticated
 
@@ -26,13 +30,13 @@ class UserRegistrationView(APIView):
             return Response(
                 {
                     "status": True,
-                    "msg": "User Registration Successfull",
+                    "message": "User Registration Successfull",
                     "data": token,
                 },
                 status=status.HTTP_201_CREATED,
             )
         return Response(
-            {"status": False, "msg": serializer.errors, "data": ""},
+            {"status": False, "errors": serializer.errors, "data": ""},
             status=status.HTTP_400_BAD_REQUEST,
         )
 
@@ -49,7 +53,7 @@ class UserLoginView(APIView):
                 return Response(
                     {
                         "status": True,
-                        "msg": "User Login Successfull",
+                        "message": "User Login Successfull",
                         "data": token,
                     },
                     status=status.HTTP_200_OK,
@@ -58,12 +62,26 @@ class UserLoginView(APIView):
                 return Response(
                     {
                         "status": False,
-                        "msg": "Email or Password is not valid.",
+                        "errors": "Email or Password is not valid.",
                         "data": "",
                     },
                     status=status.HTTP_404_NOT_FOUND,
                 )
         return Response(
-            {"status": False, "msg": serializer.errors, "data": ""},
+            {"status": False, "errors": serializer.errors, "data": ""},
             status=status.HTTP_400_BAD_REQUEST,
+        )
+
+
+class UserProfileView(APIView):
+    permission_classes = [IsAuthenticated]
+    def get(self, request, format=None):
+        serializer = UserProfileSerializer(request.user)
+        return Response(
+            {
+                "status": True,
+                "message": "Profile Fetched Successfull",
+                "data": serializer.data,
+            },
+            status=status.HTTP_200_OK,
         )
