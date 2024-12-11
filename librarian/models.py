@@ -6,7 +6,8 @@ class Book(models.Model):
     title = models.CharField(max_length=200)
     author = models.CharField(max_length=200)
     isbn = models.CharField(max_length=13, unique=True)
-    copies = models.IntegerField(default=1)
+    total_copies = models.IntegerField(default=1)
+    current_copies = models.IntegerField(default=1)
 
 
 class BorrowRequest(models.Model):

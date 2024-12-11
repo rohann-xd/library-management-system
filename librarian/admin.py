@@ -9,5 +9,6 @@ class LibraryBooks(admin.ModelAdmin):
         "title",
         "author",
         "isbn",
-        "copies",
+        "total_copies",
+        "current_copies"
     )

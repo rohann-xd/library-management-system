@@ -3,7 +3,7 @@ from rest_framework import status
 from rest_framework.views import APIView
 from rest_framework.permissions import IsAuthenticated
 from librarian.models import Book
-from librarian.serializers import BookSerializer
+from librarian.serializers import BookSerializer, GetBookSerializer
 
 
 class BookListCreateView(APIView):
@@ -11,11 +11,11 @@ class BookListCreateView(APIView):
 
     def get(self, request, format=None):
         books = Book.objects.all()
-        serializer = BookSerializer(books, many=True)
+        serializer = GetBookSerializer(books, many=True)
         return Response(
             {
                 "status": True,
-                "message": "Books Fetched Successfull",
+                "message": "Books Fetched Successfully",
                 "data": serializer.data,
             },
             status=status.HTTP_200_OK,
@@ -34,11 +34,17 @@ class BookListCreateView(APIView):
         serializer = BookSerializer(data=request.data)
         if serializer.is_valid():
             book = serializer.save()
+            book.current_copies = book.total_copies
+            book.save()
             return Response(
                 {
                     "status": True,
                     "message": "Books Added Successfull",
-                    "data": {"book-id": book.id},
+                    "data": {
+                        "book-id": book.id,
+                        "book-total-copies": book.total_copies,
+                        "book-current-copies": book.current_copies,
+                    },
                 },
                 status=status.HTTP_201_CREATED,
             )
