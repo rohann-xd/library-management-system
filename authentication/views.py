@@ -1,7 +1,6 @@
 from rest_framework.response import Response
 from rest_framework import status
 from rest_framework.views import APIView
-from authentication.models import User
 from django.contrib.auth import authenticate
 from authentication.serializers import (
     UserRegisterationSerializer,
@@ -23,7 +22,18 @@ def get_tokens_for_user(user):
 
 
 class UserRegistrationView(APIView):
+    permission_classes = [IsAuthenticated]
+
     def post(self, request, format=None):
+        if request.user.is_admin == False:
+            return Response(
+                {
+                    "status": False,
+                    "errors": "Only Admin can register a new user",
+                    "data": "",
+                },
+                status=status.HTTP_400_BAD_REQUEST,
+            )
         serializer = UserRegisterationSerializer(data=request.data)
         if serializer.is_valid():
             user = serializer.save()
