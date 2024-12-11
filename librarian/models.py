@@ -9,6 +9,9 @@ class Book(models.Model):
     total_copies = models.IntegerField(default=1)
     current_copies = models.IntegerField(default=1)
 
+    def __str__(self):
+        return self.title
+
 
 class BorrowRequest(models.Model):
     user = models.ForeignKey(User, on_delete=models.CASCADE)
@@ -23,7 +26,11 @@ class BorrowRequest(models.Model):
             ("Approved", "Approved"),
             ("Denied", "Denied"),
         ],
+        default="Pending",
     )
+
+    def __str__(self):
+        return str(self.user)
 
 
 class BorrowHistory(models.Model):
