@@ -4,6 +4,7 @@ from rest_framework.views import APIView
 from rest_framework.permissions import IsAuthenticated
 from librarian.models import Book, BorrowRequest
 from libraryusers.serializers import BookSerializer, SendBorrowRequestSerializer
+from django.utils import timezone
 
 
 class BookListCreateView(APIView):
@@ -50,7 +51,8 @@ class SendBorrowRequestView(APIView):
                 )
 
             user = request.user
-            if BorrowRequest.objects.filter(user=user, status="Approved").exists():
+            approved_request = BorrowRequest.objects.filter(user=user, status="Approved").last()
+            if approved_request and timezone.now().date() <= approved_request.end_date:
                 return Response(
                     {
                         "status": False,

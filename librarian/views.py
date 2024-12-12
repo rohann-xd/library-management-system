@@ -2,8 +2,12 @@ from rest_framework.response import Response
 from rest_framework import status
 from rest_framework.views import APIView
 from rest_framework.permissions import IsAuthenticated
-from librarian.models import Book
-from librarian.serializers import BookSerializer, GetBookSerializer
+from librarian.models import Book, BorrowRequest
+from librarian.serializers import (
+    BookSerializer,
+    GetBookSerializer,
+    BorrowRequestPermissionSerializer,
+)
 
 
 class BookListCreateView(APIView):
@@ -51,4 +55,38 @@ class BookListCreateView(APIView):
         return Response(
             {"status": False, "errors": serializer.errors, "data": ""},
             status=status.HTTP_400_BAD_REQUEST,
+        )
+
+
+class BorrowRequestPermissionView(APIView):
+    permission_classes = [IsAuthenticated]
+
+    def get(self, request, format=None):
+        if request.user.is_admin == False:
+            return Response(
+                {
+                    "status": False,
+                    "errors": "Only Admin can get list of pending request.",
+                    "data": None,
+                },
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+        requests = BorrowRequest.objects.filter(status="Pending")
+        if not requests.exists():
+            return Response(
+                {
+                    "status": True,
+                    "message": "No pending borrow requests.",
+                    "data": None,
+                },
+                status=status.HTTP_200_OK,
+            )
+        serializer = BorrowRequestPermissionSerializer(requests, many=True)
+        return Response(
+            {
+                "status": True,
+                "message": "Borrow request fetched Successfully",
+                "data": serializer.data,
+            },
+            status=status.HTTP_200_OK,
         )
