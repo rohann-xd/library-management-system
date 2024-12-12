@@ -2,12 +2,14 @@ from rest_framework.response import Response
 from rest_framework import status
 from rest_framework.views import APIView
 from rest_framework.permissions import IsAuthenticated
+from authentication.models import User
 from librarian.models import Book, BorrowRequest, BorrowHistory
 from librarian.serializers import (
     BookSerializer,
     GetBookSerializer,
     GetBorrowRequestSerializer,
     BorrowRequestPermissionSerializer,
+    BorrowHistorySerializer,
 )
 from django.utils import timezone
 
@@ -222,4 +224,60 @@ class BorrowRequestPermissionView(APIView):
         return Response(
             {"status": False, "errors": serializer.errors, "data": ""},
             status=status.HTTP_400_BAD_REQUEST,
+        )
+
+
+class BorrowHistoryView(APIView):
+    permission_classes = [IsAuthenticated]
+
+    def get(self, request, user_id=None, format=None):
+        if not request.user.is_admin:
+            return Response(
+                {
+                    "status": False,
+                    "errors": "Only Admin can view borrow histories.",
+                    "data": None,
+                },
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+        if user_id is None:
+            return Response(
+                {
+                    "status": False,
+                    "errors": "User ID is required.",
+                    "data": None,
+                },
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+
+        try:
+            user_id = int(user_id)
+        except ValueError:
+            return Response(
+                {
+                    "status": False,
+                    "errors": "User ID must be an integer.",
+                    "data": None,
+                },
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+        if not User.objects.filter(id=user_id).exists():
+            return Response(
+                {
+                    "status": False,
+                    "errors": "No User found with this ID.",
+                    "data": None,
+                },
+                status=status.HTTP_404_NOT_FOUND,
+            )
+        user = User.objects.get(id=user_id)
+        borrow_history = BorrowHistory.objects.filter(user=user)
+        serializer = BorrowHistorySerializer(borrow_history, many=True)
+        return Response(
+            {
+                "status": True,
+                "message": "Borrow history fetched successfully.",
+                "data": serializer.data,
+            },
+            status=status.HTTP_200_OK,
         )

@@ -1,5 +1,5 @@
 from rest_framework import serializers
-from librarian.models import Book, BorrowRequest
+from librarian.models import Book, BorrowRequest, BorrowHistory
 
 
 class BookSerializer(serializers.ModelSerializer):
@@ -54,3 +54,12 @@ class BorrowRequestPermissionSerializer(serializers.Serializer):
 
     class Meta:
         fields = ["request_id", "status"]
+
+
+class BorrowHistorySerializer(serializers.ModelSerializer):
+    book_title = serializers.CharField(source="book.title", read_only=True)
+    user_name = serializers.CharField(source="user.email", read_only=True)
+
+    class Meta:
+        model = BorrowHistory
+        fields = ["id", "user_name", "book_title", "borrow_date", "return_date"]
