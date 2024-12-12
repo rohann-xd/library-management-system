@@ -1,5 +1,5 @@
 from rest_framework import serializers
-from librarian.models import Book, BorrowRequest
+from librarian.models import Book, BorrowRequest, BorrowHistory
 from django.utils import timezone
 
 
@@ -23,3 +23,12 @@ class SendBorrowRequestSerializer(serializers.ModelSerializer):
         if value < request_date:
             raise serializers.ValidationError("The start date cannot be in the past.")
         return value
+
+
+class BorrowHistorySerializer(serializers.ModelSerializer):
+    book_title = serializers.CharField(source="book.title", read_only=True)
+    user_name = serializers.CharField(source="user.email", read_only=True)
+
+    class Meta:
+        model = BorrowHistory
+        fields = ["id", "user_name", "book_title", "borrow_date", "return_date"]

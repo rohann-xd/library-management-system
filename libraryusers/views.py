@@ -2,8 +2,12 @@ from rest_framework.response import Response
 from rest_framework import status
 from rest_framework.views import APIView
 from rest_framework.permissions import IsAuthenticated
-from librarian.models import Book, BorrowRequest
-from libraryusers.serializers import BookSerializer, SendBorrowRequestSerializer
+from librarian.models import Book, BorrowRequest, BorrowHistory
+from libraryusers.serializers import (
+    BookSerializer,
+    SendBorrowRequestSerializer,
+    BorrowHistorySerializer,
+)
 from django.utils import timezone
 
 
@@ -51,7 +55,9 @@ class SendBorrowRequestView(APIView):
                 )
 
             user = request.user
-            approved_request = BorrowRequest.objects.filter(user=user, status="Approved").last()
+            approved_request = BorrowRequest.objects.filter(
+                user=user, status="Approved"
+            ).last()
             if approved_request and timezone.now().date() <= approved_request.end_date:
                 return Response(
                     {
@@ -103,4 +109,21 @@ class SendBorrowRequestView(APIView):
         return Response(
             {"status": False, "errors": serializer.errors, "data": None},
             status=status.HTTP_400_BAD_REQUEST,
+        )
+
+
+class BorrowHistoryView(APIView):
+    permission_classes = [IsAuthenticated]
+
+    def get(self, request, format=None):
+        user = request.user
+        borrow_history = BorrowHistory.objects.filter(user=user)
+        serializer = BorrowHistorySerializer(borrow_history, many=True)
+        return Response(
+            {
+                "status": True,
+                "message": "Borrow history fetched successfully.",
+                "data": serializer.data,
+            },
+            status=status.HTTP_200_OK,
         )
