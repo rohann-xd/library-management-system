@@ -1,3 +1,5 @@
+import csv
+from django.http import HttpResponse
 from rest_framework.response import Response
 from rest_framework import status
 from rest_framework.views import APIView
@@ -117,6 +119,11 @@ class BorrowHistoryView(APIView):
 
     def get(self, request, format=None):
         user = request.user
+        download = request.query_params.get("download", None)
+
+        if download:
+            return self.download_csv(user)
+
         borrow_history = BorrowHistory.objects.filter(user=user)
         serializer = BorrowHistorySerializer(borrow_history, many=True)
         return Response(
@@ -127,3 +134,16 @@ class BorrowHistoryView(APIView):
             },
             status=status.HTTP_200_OK,
         )
+
+    def download_csv(self, user):
+        borrow_history = BorrowHistory.objects.filter(user=user)
+        response = HttpResponse(content_type="text/csv")
+        response["Content-Disposition"] = 'attachment; filename="borrow_history.csv"'
+
+        writer = csv.writer(response)
+        writer.writerow(["Book Title", "Borrow Date", "Return Date"])
+
+        for record in borrow_history:
+            writer.writerow([record.book.title, record.borrow_date, record.return_date])
+
+        return response
