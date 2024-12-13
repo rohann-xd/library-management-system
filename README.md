@@ -73,7 +73,7 @@ DB_USER=postgres
 DB_PASSWORD=YOUR-DB-PASSWORD
 DB_HOST=localhost
 DB_PORT=5432 
-DEBUG=True
+DEBUG_MODE=True
 ```
 
 ---
