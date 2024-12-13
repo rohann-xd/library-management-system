@@ -23,6 +23,12 @@ class SendBorrowRequestSerializer(serializers.ModelSerializer):
         if value < request_date:
             raise serializers.ValidationError("The start date cannot be in the past.")
         return value
+    
+    def validate_end_date(self, value):
+        request_date = timezone.now().date()
+        if value < request_date:
+            raise serializers.ValidationError("The end date cannot be in the past.")
+        return value
 
 
 class BorrowHistorySerializer(serializers.ModelSerializer):
