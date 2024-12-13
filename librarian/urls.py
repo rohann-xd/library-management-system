@@ -3,6 +3,7 @@ from librarian.views import (
     BookListCreateView,
     BorrowRequestPermissionView,
     BorrowHistoryView,
+    CronJobView,
 )
 
 urlpatterns = [
@@ -22,4 +23,5 @@ urlpatterns = [
         BorrowHistoryView.as_view(),
         name="borrow_history",
     ),
+    path("cronjob/", CronJobView.as_view(), name="cronjob"),
 ]

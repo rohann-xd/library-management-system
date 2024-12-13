@@ -281,3 +281,45 @@ class BorrowHistoryView(APIView):
             },
             status=status.HTTP_200_OK,
         )
+
+
+class CronJobView(APIView):
+    def get(self, request, format=None):
+        pending_start_date_passed = BorrowRequest.objects.filter(
+            status="Pending", start_date__lt=timezone.now().date()
+        )
+        pending_start_date_passed_count = pending_start_date_passed.count()
+        pending_start_date_passed.delete()
+
+        pending_end_date_passed = BorrowRequest.objects.filter(
+            status="Pending", end_date__lt=timezone.now().date()
+        )
+        pending_end_date_passed_count = pending_end_date_passed.count()
+        pending_end_date_passed.delete()
+
+        denied_requests = BorrowRequest.objects.filter(status="Denied")
+        denied_requests_count = denied_requests.count()
+        denied_requests.delete()
+
+        approved_end_date_passed = BorrowRequest.objects.filter(
+            status="Approved", end_date__lt=timezone.now().date()
+        )
+        approved_end_date_passed_count = approved_end_date_passed.count()
+        for request in approved_end_date_passed:
+            request.book.current_copies += 1
+            request.book.save()
+            request.delete()
+
+        return Response(
+            {
+                "status": True,
+                "message": "Cronjob executed successfully.",
+                "data": {
+                    "deleted_pending_start_date_passed": pending_start_date_passed_count,
+                    "deleted_pending_end_date_passed": pending_end_date_passed_count,
+                    "deleted_denied_requests": denied_requests_count,
+                    "deleted_approved_end_date_passed": approved_end_date_passed_count,
+                },
+            },
+            status=status.HTTP_200_OK,
+        )
