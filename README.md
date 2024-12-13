@@ -68,7 +68,11 @@ Create a `.env` file in the root directory for sensitive data (e.g., `SECRET_KEY
 Example `.env` file:
 
 ```
-SECRET_KEY=your_secret_key 
+DB_NAME=YOUR-DB-Name
+DB_USER=postgres
+DB_PASSWORD=YOUR-DB-PASSWORD
+DB_HOST=localhost
+DB_PORT=5432 
 DEBUG=True
 ```
 
