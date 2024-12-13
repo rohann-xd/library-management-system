@@ -23,6 +23,7 @@ class GetBookSerializer(serializers.ModelSerializer):
             "borrowed_books",
         ]
 
+    # returns available copies of that book in library
     def get_borrowed_books(self, obj):
         return obj.total_copies - obj.current_copies
 

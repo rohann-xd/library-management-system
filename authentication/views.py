@@ -21,10 +21,14 @@ def get_tokens_for_user(user):
     }
 
 
+# User Registration View
 class UserRegistrationView(APIView):
     permission_classes = [IsAuthenticated]
 
     def post(self, request, format=None):
+        """
+        Only Admin can register a new user. No other entity can use this api
+        """
         if request.user.is_admin == False:
             return Response(
                 {
@@ -34,9 +38,11 @@ class UserRegistrationView(APIView):
                 },
                 status=status.HTTP_400_BAD_REQUEST,
             )
+        # Check if all the inputs are present and in correct format
         serializer = UserRegisterationSerializer(data=request.data)
         if serializer.is_valid():
             user = serializer.save()
+            # Generating JWT token for the user
             token = get_tokens_for_user(user)
             return Response(
                 {
@@ -46,19 +52,23 @@ class UserRegistrationView(APIView):
                 },
                 status=status.HTTP_201_CREATED,
             )
+        # If any error occur in serializer, it will go in the responce
         return Response(
             {"status": False, "errors": serializer.errors, "data": ""},
             status=status.HTTP_400_BAD_REQUEST,
         )
 
 
+# User Login View to get JWT token
 class UserLoginView(APIView):
     def post(self, request, format=None):
+        # To validate the inputs for login
         serializer = UserLoginSerializer(data=request.data)
         if serializer.is_valid():
             email = serializer.data.get("email")
             password = serializer.data.get("password")
             user = authenticate(email=email, password=password)
+            # If email and password are correct, return JWT token
             if user is not None:
                 token = get_tokens_for_user(user)
                 return Response(
@@ -70,6 +80,7 @@ class UserLoginView(APIView):
                     status=status.HTTP_200_OK,
                 )
             else:
+                # If wrong email or password input
                 return Response(
                     {
                         "status": False,
@@ -87,6 +98,7 @@ class UserLoginView(APIView):
 class UserProfileView(APIView):
     permission_classes = [IsAuthenticated]
 
+    # To get/fetch user details
     def get(self, request, format=None):
         serializer = UserProfileSerializer(request.user)
         return Response(
@@ -110,7 +122,7 @@ class UserChangePasswordView(APIView):
             return Response(
                 {
                     "status": True,
-                    "message": "Profile Changed Successfull",
+                    "message": "Password Changed Successfull",
                     "data": "",
                 },
                 status=status.HTTP_200_OK,

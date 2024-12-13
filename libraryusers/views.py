@@ -16,6 +16,7 @@ from django.utils import timezone
 class BookListCreateView(APIView):
     permission_classes = [IsAuthenticated]
 
+    # Get list of all the book available in the library
     def get(self, request, format=None):
         books = Book.objects.all()
         serializer = BookSerializer(books, many=True)
@@ -34,8 +35,10 @@ class SendBorrowRequestView(APIView):
 
     def post(self, request, format=None):
         serializer = SendBorrowRequestSerializer(data=request.data)
+        # Check all the required inputs are entered or not
         if serializer.is_valid():
             book_isbn = serializer.validated_data.get("book_isbn")
+            # If enetered book isbn is not available or not exist
             if not Book.objects.filter(isbn=book_isbn).exists():
                 return Response(
                     {
@@ -46,6 +49,7 @@ class SendBorrowRequestView(APIView):
                     status=status.HTTP_400_BAD_REQUEST,
                 )
             book = Book.objects.get(isbn=book_isbn)
+            # If no copies of the books are left, do not allow to request
             if book.current_copies < 1:
                 return Response(
                     {
@@ -60,6 +64,7 @@ class SendBorrowRequestView(APIView):
             approved_request = BorrowRequest.objects.filter(
                 user=user, status="Approved"
             ).last()
+            # If the user has already one book borrowed, user can't borrow two books at the same time
             if approved_request and timezone.now().date() <= approved_request.end_date:
                 return Response(
                     {
@@ -69,6 +74,7 @@ class SendBorrowRequestView(APIView):
                     },
                     status=status.HTTP_400_BAD_REQUEST,
                 )
+            # If the borrow request for that book is already denied
             elif BorrowRequest.objects.filter(
                 user=user,
                 book=book,
@@ -82,6 +88,7 @@ class SendBorrowRequestView(APIView):
                     },
                     status=status.HTTP_400_BAD_REQUEST,
                 )
+            # If the borrow request is still in pending state
             elif BorrowRequest.objects.filter(
                 user=user, book=book, status="Pending"
             ).exists():
@@ -94,6 +101,7 @@ class SendBorrowRequestView(APIView):
                     status=status.HTTP_400_BAD_REQUEST,
                 )
 
+            # If everything is correct, send new borrow request
             BorrowRequest.objects.create(
                 user=user,
                 book=book,
@@ -117,8 +125,10 @@ class SendBorrowRequestView(APIView):
 class BorrowHistoryView(APIView):
     permission_classes = [IsAuthenticated]
 
+    # Get request to view borrow history of logged in user
     def get(self, request, format=None):
         user = request.user
+        # If user want to download borrow history in .csv
         download = request.query_params.get("download", None)
 
         if download:
@@ -135,6 +145,7 @@ class BorrowHistoryView(APIView):
             status=status.HTTP_200_OK,
         )
 
+    # Function to download borrow history in form of .csv file
     def download_csv(self, user):
         borrow_history = BorrowHistory.objects.filter(user=user)
         response = HttpResponse(content_type="text/csv")

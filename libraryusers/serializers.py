@@ -18,12 +18,14 @@ class SendBorrowRequestSerializer(serializers.ModelSerializer):
         model = BorrowRequest
         fields = ["book_isbn", "start_date", "end_date"]
 
+    # If user try to request in past date
     def validate_start_date(self, value):
         request_date = timezone.now().date()
         if value < request_date:
             raise serializers.ValidationError("The start date cannot be in the past.")
         return value
-    
+
+    # If user entered a past end date
     def validate_end_date(self, value):
         request_date = timezone.now().date()
         if value < request_date:

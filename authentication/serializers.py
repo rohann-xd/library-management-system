@@ -45,9 +45,11 @@ class UserChangePasswordSerializer(serializers.Serializer):
     password2 = serializers.CharField(
         max_length=255, style={"input_type": "password"}, write_only=True
     )
+
     class Meta:
         fields = ["password", "password2"]
 
+    # Checkking if password and password2 are same
     def validate(self, attrs):
         password = attrs.get("password")
         password2 = attrs.get("password2")
