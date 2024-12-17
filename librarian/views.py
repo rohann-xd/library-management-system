@@ -235,7 +235,7 @@ class BorrowRequestPermissionView(APIView):
             return Response(
                 {
                     "status": True,
-                    "message": f"Borrow request decision : {serializer.data.get("status")}",
+                    "message": f"Borrow request decision : {serializer.data.get('status')}",
                     "data": None,
                 },
                 status=status.HTTP_200_OK,
